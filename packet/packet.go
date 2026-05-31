@@ -25,7 +25,12 @@ func (rp *RawPacket) PacketID() (VarInt, error) {
 	if len(rp.Buf) == 0 {
 		return 0, internal.ErrPacketTooShort
 	}
-	id, _, err := ReadVarIntFromBytes(rp.Buf)
+	// Skip the length VarInt, then read the packet ID VarInt
+	_, afterLen, err := ReadVarIntFromBytes(rp.Buf)
+	if err != nil {
+		return 0, err
+	}
+	id, _, err := ReadVarIntFromBytes(afterLen)
 	return id, err
 }
 

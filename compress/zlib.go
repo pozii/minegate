@@ -25,7 +25,6 @@ func getWriter(w io.Writer) (*kzlib.Writer, error) {
 }
 
 func putWriter(zw *kzlib.Writer) {
-	zw.Close()
 	writerPool.Put(zw)
 }
 
@@ -74,17 +73,12 @@ func Decompress(data []byte, maxSize int) ([]byte, error) {
 	}
 	defer putReader(r)
 
-	buf := internal.GetBuffer(maxSize)
-	n, err := r.Read(buf)
-	if err != nil && err != io.EOF {
-		internal.PutBuffer(buf)
+	var buf bytes.Buffer
+	if _, err := io.CopyN(&buf, r, int64(maxSize)); err != nil && err != io.EOF {
 		return nil, internal.ErrCompressionFailed
 	}
 
-	result := make([]byte, n)
-	copy(result, buf[:n])
-	internal.PutBuffer(buf)
-	return result, nil
+	return buf.Bytes(), nil
 }
 
 // CompressBuffer is like Compress but takes a destination buffer as parameter.

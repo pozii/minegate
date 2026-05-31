@@ -77,7 +77,15 @@ func (pq *PriorityQueue) Pop() (*PriorityItem, error) {
 	pq.mu.Lock()
 	defer pq.mu.Unlock()
 
-	if pq.closed && pq.Len() == 0 {
+	empty := true
+	for _, l := range pq.levels {
+		if l.Len() > 0 {
+			empty = false
+			break
+		}
+	}
+
+	if pq.closed && empty {
 		return nil, internal.ErrConnectionClosed
 	}
 
