@@ -154,6 +154,72 @@ func TestAppendLegacyForwardingIPv6(t *testing.T) {
 	}
 }
 
+func TestAppendModernForwarding(t *testing.T) {
+	uuid := [16]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+	ip := net.ParseIP("10.0.0.1")
+
+	data := ForwardingData{
+		Mode:     ForwardModern,
+		UUID:     uuid,
+		IP:       ip,
+		Username: "Player1",
+	}
+
+	pkt := packet.Packet{ID: 0x02, Data: []byte("fake-login-success-data")}
+	origLen := len(pkt.Data)
+
+	result, err := AppendModernForwarding(pkt, data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if result.ID != 0x02 {
+		t.Errorf("packet ID changed: got 0x%x, want 0x02", result.ID)
+	}
+	if len(result.Data) <= origLen {
+		t.Fatal("forwarding data was not appended")
+	}
+
+	// UUID should start right after original data
+	gotUUID := result.Data[origLen : origLen+16]
+	var expectedUUID [16]byte
+	copy(expectedUUID[:], gotUUID)
+	if expectedUUID != uuid {
+		t.Errorf("UUID mismatch: got %v, want %v", expectedUUID, uuid)
+	}
+}
+
+func TestParseModernForwarding(t *testing.T) {
+	uuid := [16]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+	ip := net.ParseIP("10.0.0.1")
+
+	extra := make([]byte, 0, 32)
+	extra = append(extra, uuid[:]...)
+
+	ipStr := ip.String()
+	buf := make([]byte, packet.MaxVarIntLen)
+	n := packet.PutVarInt(buf, int32(len(ipStr)))
+	extra = append(extra, buf[:n]...)
+	extra = append(extra, []byte(ipStr)...)
+	n = packet.PutVarInt(buf, 0)
+	extra = append(extra, buf[:n]...)
+
+	fd, err := ParseModernForwarding(extra)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fd.UUID != uuid {
+		t.Errorf("UUID: got %v, want %v", fd.UUID, uuid)
+	}
+}
+
+func TestParseModernForwardingTooShort(t *testing.T) {
+	_, err := ParseModernForwarding([]byte{0, 1, 2})
+	if err == nil {
+		t.Fatal("expected error for too-short data")
+	}
+}
+
 func TestCreateVelocityForwardingPacket(t *testing.T) {
 	uuid := [16]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
 	ip := net.ParseIP("10.0.0.1")

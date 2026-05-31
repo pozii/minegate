@@ -35,13 +35,54 @@ func AppendLegacyForwarding(host string, clientIP net.IP) string {
 	return host + "\x00" + clientIP.String() + "\x00"
 }
 
-// AppendModernForwarding appends UUID+IP+profile to the login success packet
-// for modern BungeeCord forwarding.
+// AppendModernForwarding appends UUID+IP+empty properties to the LoginSuccess
+// packet for modern BungeeCord forwarding.
+//
+// The appended format (after normal LoginSuccess fields):
+//
+//	UUID (16 bytes)
+//	IP   (VarInt-length-prefixed UTF-8 string)
+//	Properties (VarInt 0 — empty)
 func AppendModernForwarding(pkt packet.Packet, data ForwardingData) (packet.Packet, error) {
-	// Login Success (0x03) packet: UUID + Username + ...
-	// Modern forwarding appends extra data at the end of this packet
-	// Leaving this passive for now
+	extra := make([]byte, 0, 32)
+	extra = append(extra, data.UUID[:]...)
+
+	ipStr := data.IP.String()
+	buf := make([]byte, packet.MaxVarIntLen)
+	n := packet.PutVarInt(buf, int32(len(ipStr)))
+	extra = append(extra, buf[:n]...)
+	extra = append(extra, []byte(ipStr)...)
+
+	n = packet.PutVarInt(buf, 0)
+	extra = append(extra, buf[:n]...)
+
+	pkt.Data = append(pkt.Data, extra...)
 	return pkt, nil
+}
+
+// ParseModernForwarding extracts BungeeCord modern forwarding data from
+// the extra bytes appended to a LoginSuccess packet. The caller must know
+// where normal LoginSuccess fields end; pass everything after that point.
+func ParseModernForwarding(extra []byte) (*ForwardingData, error) {
+	if len(extra) < 16 {
+		return nil, internal.ErrPacketTooShort
+	}
+
+	var fd ForwardingData
+	copy(fd.UUID[:], extra[:16])
+	extra = extra[16:]
+
+	ipLen, remaining, err := packet.ReadVarIntFromBytes(extra)
+	if err != nil {
+		return nil, err
+	}
+	if int(ipLen) > len(remaining) || ipLen < 0 {
+		return nil, internal.ErrPacketTooShort
+	}
+	fd.IP = net.ParseIP(string(remaining[:ipLen]))
+	// ParseModernForwarding is best-effort; ignore properties count
+
+	return &fd, nil
 }
 
 // buildVelocityPlaintext builds the plaintext payload for Velocity forwarding.
