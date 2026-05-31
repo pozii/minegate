@@ -3,6 +3,9 @@
   <img alt="minegate" src="github-assets/img/banner.png">
 </picture>
 
+[![CI](https://github.com/pozii/minegate/actions/workflows/ci.yml/badge.svg)](https://github.com/pozii/minegate/actions/workflows/ci.yml)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/pozii/minegate?label=Go)](https://golang.org/dl/)
+
 **minegate** is a high-performance, multi-transport network tunneling library for Minecraft Java Edition, written in Go.
 
 It provides zero-copy packet forwarding, smart packet batching, advanced flow control, and multiple transport backends (TCP, TLS, WebSocket, KCP, QUIC, SOCKS5) under a single, consistent API.
