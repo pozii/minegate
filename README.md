@@ -208,3 +208,17 @@ minegate/
 | [`xtaci/kcp-go`](https://github.com/xtaci/kcp-go) | KCP (UDP) transport |
 | [`quic-go/quic-go`](https://github.com/quic-go/quic-go) | QUIC transport |
 | [`gorilla/websocket`](https://github.com/gorilla/websocket) | WebSocket transport |
+
+---
+
+## License
+
+Apache License 2.0 — see `LICENSE` file for details.
+
+---
+
+<p align="center">
+  <a href="https://www.buymeacoffee.com/pozii">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="50">
+  </a>
+</p>
