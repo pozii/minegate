@@ -211,13 +211,3 @@ minegate/
 | [`xtaci/kcp-go`](https://github.com/xtaci/kcp-go) | KCP (UDP) transport |
 | [`quic-go/quic-go`](https://github.com/quic-go/quic-go) | QUIC transport |
 | [`gorilla/websocket`](https://github.com/gorilla/websocket) | WebSocket transport |
-
-<p align="center">
-  I provide my work for free. If you'd like to support it, you can buy me a coffee.
-</p>
-
-<p align="center">
-  <a href="https://www.buymeacoffee.com/pozii">
-    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="50">
-  </a>
-</p>
